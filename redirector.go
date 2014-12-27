@@ -21,36 +21,6 @@ type Conf struct {
 // conf variable holds the app's configuration.
 var conf Conf
 
-func main() {
-  flag.Parse()
-  defer glog.Flush()
-
-  err := envconfig.Process("redirector", &conf)
-  if err != nil {
-    glog.Fatalf("Couldn't load environment: %s", err)
-  }
-
-  if conf.Host == "" {
-    glog.Infof("Host not set, using default of 0.0.0.0")
-    conf.Host = "0.0.0.0"
-  }
-  if conf.Port == "" {
-    glog.Infof("Port not set, using default of 9000")
-    conf.Port = "9000"
-  }
-
-  router := mux.NewRouter()
-  // subRouter := router.Schemes("{scheme}").Host("{host}").Subrouter()
-  // subRouter.HandleFunc("/{path:([a-zA-Z0-9]+$)}", common.Resolve)
-  http.Handle("/", httpInterceptor(router))
-
-  listen := conf.Host
-  port := conf.Port
-  addr := listen + ":" + port
-
-  http.ListenAndServe(addr, nil)
-}
-
 func httpInterceptor(router http.Handler) http.Handler {
   return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
     startTime := time.Now()
@@ -70,4 +40,39 @@ func httpInterceptor(router http.Handler) http.Handler {
     }
 
   })
+}
+
+func main() {
+  flag.Parse()
+  defer glog.Flush()
+
+  err := envconfig.Process("redirector", &conf)
+  if err != nil {
+    glog.Fatalf("Couldn't load environment: %s", err)
+  }
+
+  if conf.Host == "" {
+    glog.Infof("Host not set, using default of 0.0.0.0")
+    conf.Host = "0.0.0.0"
+  }
+  if conf.Port == "" {
+    glog.Infof("Port not set, using default of 9000")
+    conf.Port = "9000"
+  }
+
+  common.Init()
+
+  glog.Infof("Config: %+v", conf)
+
+  router := mux.NewRouter()
+  subRouter := router.Schemes("{scheme:(.*)}").Host("{host:(.*)}").Subrouter()
+  subRouter.HandleFunc("/{path:([a-zA-Z0-9]+$)}", common.Resolve).Methods("GET")
+  router.Handle("/", subRouter)
+  http.Handle("/", httpInterceptor(subRouter))
+
+  listen := conf.Host
+  port := conf.Port
+  addr := listen + ":" + port
+
+  http.ListenAndServe(addr, nil)
 }
