@@ -1,0 +1,2 @@
+web: redirector
+admin: admin
