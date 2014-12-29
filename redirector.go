@@ -66,8 +66,8 @@ func main() {
 
   router := mux.NewRouter()
   subRouter := router.Schemes("{scheme:(.*)}").Host("{host:(.*)}").Subrouter()
-  subRouter.HandleFunc("/{path:([a-zA-Z0-9]+$)}", common.Resolve).Methods("GET")
-  router.Handle("/", subRouter)
+  subRouter.HandleFunc("/{path:([a-zA-Z0-9]+$)}", common.Resolve)
+  // router.Handle("/", httpInterceptor(subRouter))
   http.Handle("/", httpInterceptor(subRouter))
 
   listen := conf.Host
