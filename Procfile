@@ -1,2 +1,2 @@
 web: ./redirector --logtostderr=true
-admin: admin
+admin: ./admin --logtostderr=true
