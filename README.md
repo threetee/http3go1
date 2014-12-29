@@ -2,17 +2,29 @@
 
 ## Description
 
-http3go1 is a configurable HTTP redirector built in go. It currently uses redis for all storage.
+http3go1 is a configurable HTTP redirector built in go. It currently uses redis (presumably with persistence) for all storage.
+
+## Prerequisites
+
+* go
+* redis
+* Ruby (optional, for the foreman gem)
 
 ## Getting Started
 
-  $ godep get
+  $ gem install --no-ri --no-rdoc foreman
   $ make
-  $ make install
+  $ foreman start
+
+Or, without foreman:
+
+  $ make
+  $ ./admin &
+  $ ./redirector &
 
 ## Configuration
 
-Both the redirector and the admin component are intended to be configured via environment variables (see http://12factor.net/config). The following environment variables should be used:
+Both the redirector and the admin component are intended to be configured via environment variables (see http://12factor.net/config). The following environment variables are available for use:
 
 | Variable         | Description                                       | Type   | Default Value      |
 |------------------|---------------------------------------------------|--------|--------------------|
@@ -39,3 +51,13 @@ Redirects are stored in redis hashes, with fields:
 * Clicks
 
 Hashes are stored using the source URL as the key.
+
+## Containerization
+
+You can build docker containers for both components by running:
+
+  $ make docker-dist
+
+## Acknowledgements
+
+I based this tool on kurz.go (https://github.com/fs111/kurz.go), although much has been modified. Thanks to the kurz.go author for a good reference point.
