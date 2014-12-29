@@ -12,14 +12,20 @@ endif
 
 CLEANFILES=$(MYTARGDIR)
 
-ALL=admin redirector
+ALL=deps admin redirector
 
 all: $(ALL)
 
-%: %.go
+deps:
+	go get github.com/kelseyhightower/envconfig
+	go get github.com/simonz05/godis/redis
+	go get github.com/gorilla/mux
+	go get github.com/golang/glog
+
+%: deps %.go
 	go build $@.go
 
-test:
+test: deps
 	go test lib/*.go
 	go test admin.go
 	go test redirector.go
@@ -28,6 +34,20 @@ clean:
 	rm -f $(ALL)
 	rm -rf $(CLEANFILES)
 	go clean
+
+docker-dist: deps docker-dist-redirector docker-dist-admin
+
+docker-dist-redirector:
+	-rm -f Dockerfile
+	ln -s Dockerfile.redirector Dockerfile
+	docker build -t threetee/http3go1-redirector .
+	-rm -f Dockerfile
+
+docker-dist-admin:
+	-rm -f Dockerfile
+	ln -s Dockerfile.admin Dockerfile
+	docker build -t threetee/http3go1-admin .
+	-rm -f Dockerfile
 
 bin-dist: admin redirector assets
 	cp admin $(MYTARGDIR)/$(PREFIX)/bin
@@ -41,4 +61,4 @@ directories:
 	mkdir -p $(MYTARGDIR)/$(STATIC_DIR)
 	mkdir -p $(MYTARGDIR)/$(PREFIX)/bin
 
-.PHONY: all clean assets directories test
+.PHONY: all deps clean assets directories test
