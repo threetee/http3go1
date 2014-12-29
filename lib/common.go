@@ -172,6 +172,9 @@ func Init() {
   if redisconf.Prefix == "" {
     redisconf.Prefix = "h3g1"
   }
+  glog.Infof("redis host:" + redisconf.Host)
+  glog.Infof("redis DB:" + redisconf.DB)
+  glog.Infof("redis prefix:" + redisconf.Prefix)
 
   host := redisconf.Host
   db, err := strconv.Atoi(redisconf.DB)

@@ -19,7 +19,7 @@ type accessLog struct {
   elapsedTime                         time.Duration
 }
 
-func LogAccess(w http.ResponseWriter, req *http.Request, duration time.Duration) {
+func logAccess(w http.ResponseWriter, req *http.Request, duration time.Duration) {
   clientIP := req.RemoteAddr
 
   if colon := strings.LastIndex(clientIP, ":"); colon != -1 {
