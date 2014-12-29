@@ -3,16 +3,6 @@
 	"GoVersion": "go1.3.3",
 	"Deps": [
 		{
-			"ImportPath": "code.google.com/p/gorilla/context",
-			"Comment": "go1-0",
-			"Rev": "75a547f433ad6a0e8e4c1d6c1e287c18737dbf72"
-		},
-		{
-			"ImportPath": "code.google.com/p/gorilla/mux",
-			"Comment": "go1-0",
-			"Rev": "75a547f433ad6a0e8e4c1d6c1e287c18737dbf72"
-		},
-		{
 			"ImportPath": "github.com/golang/glog",
 			"Rev": "44145f04b68cf362d9c4df2182967c2275eaefed"
 		},
