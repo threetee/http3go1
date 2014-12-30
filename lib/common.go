@@ -48,7 +48,7 @@ func (r Redirect) Json() []byte {
 }
 
 func constructRedirKey(url string) string {
-  return redisconf.Prefix + ":url:" + url
+  return redisconf.Prefix + ":redirect:" + url
 }
 
 func constructRedirsSetName() string {
@@ -159,7 +159,7 @@ func Resolve(w http.ResponseWriter, r *http.Request) {
   }
 }
 
-func Init() {
+func Init(defaultTarget string) {
   glog.Info("Initializing")
   err := envconfig.Process("redis", &redisconf)
 
@@ -185,5 +185,10 @@ func Init() {
 
   redis = godis.New(host, db, passwd)
 
-  filenotfound = "http://www.google.com"
+  if defaultTarget == "" {
+    filenotfound = "http://www.google.com"
+  } else {
+    filenotfound = defaultTarget
+  }
+
 }

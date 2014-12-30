@@ -15,6 +15,7 @@ type RedirConf struct {
   Debug    bool
   Host     string
   Port     string
+  Defaulttarget string
 }
 
 // redirConf variable holds the app's configuration.
@@ -38,7 +39,7 @@ func main() {
     redirConf.Port = "9000"
   }
 
-  common.Init()
+  common.Init(redirConf.Defaulttarget)
 
   glog.Infof("Config: %+v", redirConf)
 

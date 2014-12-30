@@ -55,7 +55,7 @@ func main() {
     adminConf.Port = "9001"
   }
 
-  common.Init()
+  common.Init("")
 
   glog.Infof("Config: %+v", adminConf)
 
