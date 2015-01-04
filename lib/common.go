@@ -28,11 +28,11 @@ type RedisConf struct {
 }
 
 type Redirect struct {
-  Key          string
-  SourceUrl    string
-  TargetUrl    string
-  CreationDate int64
-  Clicks       int64
+  Key          string   `json:"key"`
+  SourceUrl    string   `json:"source_url"`
+  TargetUrl    string   `json:"target_url"`
+  CreationDate int64    `json:"creation_date"`
+  Clicks       int64    `json:"clicks"`
 }
 
 var (
@@ -76,7 +76,7 @@ func store(sourceurl, targeturl string) *Redirect {
   go redis.Hset(redir.Key, "SourceUrl", redir.SourceUrl)
   go redis.Hset(redir.Key, "CreationDate", redir.CreationDate)
   go redis.Hset(redir.Key, "Clicks", redir.Clicks)
-  go redis.Sadd(redirsSet, redir.Key)
+  go redis.Sadd(redirsSet, redir.SourceUrl)
   return redir
 }
 
@@ -97,32 +97,42 @@ func load(url string) (*Redirect, error) {
   return nil, errors.New("unknown key: " + key)
 }
 
-//Returns a json array with information about the last shortened urls. If data
-// is a valid integer, that's the amount of data it will return, otherwise
-// a maximum of 10 entries will be returned.
-func Latest(w http.ResponseWriter, r *http.Request) {
-  // data := mux.Vars(r)["data"]
-  // howmany, err := strconv.ParseInt(data, 10, 64)
-  // if err != nil {
-  //   howmany = 10
-  // }
-  // redirsSet := constructRedirsSetName()
-  // c, _ := redis.Scard(redirsSet)
-
-  // last := c
-  // upTo := (last - howmany)
-
+//Returns a json array with information about all redirects.
+// TODO: allow number of entries and offset to be passed in for pagination
+func ListRedirects(w http.ResponseWriter, r *http.Request) {
+  glog.Infof("Loading redirects")
   w.Header().Set("Content-Type", "application/json")
-
   var redirs = []*Redirect{}
 
-  // for i := last; i > upTo && i > 0; i -= 1 {
-  //   redir, err := load(i)
-  //   if err == nil {
-  //     redirs = append(redirs, redir)
-  //   }
-  // }
+  redirsSetName := constructRedirsSetName()
+  rs, _ := redis.Smembers(redirsSetName)
+  for _,r := range rs.Elems {
+    redir, err := load(r.Elem.String())
+    if err == nil {
+      glog.Infof("Appending redirect")
+      redirs = append(redirs, redir)
+    } else {
+      glog.Fatal(err)
+    }
+  }
+
   s, _ := json.Marshal(redirs)
+  w.Write(s)
+}
+
+// Creates a new redirect
+func CreateRedirect(w http.ResponseWriter, r *http.Request) {
+  glog.Infof("Creating redirect")
+  w.Header().Set("Content-Type", "application/json")
+
+  decoder := json.NewDecoder(r.Body)
+  var redir Redirect
+  err := decoder.Decode(&redir)
+  if err != nil {
+    glog.Fatal(err)
+  }
+
+  s, _ := json.Marshal(store(redir.SourceUrl, redir.TargetUrl))
   w.Write(s)
 }
 

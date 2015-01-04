@@ -60,6 +60,9 @@ func main() {
   glog.Infof("Config: %+v", adminConf)
 
   router := mux.NewRouter()
+  subRouter := router.PathPrefix("/redirects").Subrouter()
+  subRouter.HandleFunc("/{count:[0-9]*}", common.ListRedirects).Methods("GET")
+  subRouter.HandleFunc("/", common.CreateRedirect).Methods("POST")
   // router.HandleFunc("/add/{url:(.*$)}", store)
   // router.HandleFunc("/delete/{url:(.*$)}", shorten)
   // router.HandleFunc("/urls", create).Methods("POST")
@@ -67,11 +70,11 @@ func main() {
   // router.HandleFunc("/{short:([a-zA-Z0-9]+$)}", resolve)
   // router.HandleFunc("/{short:([a-zA-Z0-9]+)\\+$}", info)
   // router.HandleFunc("/info/{short:[a-zA-Z0-9]+}", info)
-  router.HandleFunc("/latest/{data:[0-9]+}", common.Latest)
 
   router.HandleFunc("/{fileName:(.*$)}", static)
 
   http.Handle("/", common.HttpInterceptor(router))
+  http.Handle("/redirects", common.HttpInterceptor(subRouter))
 
   listen := adminConf.Host
   port := adminConf.Port
