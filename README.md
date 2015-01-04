@@ -7,14 +7,14 @@ http3go1 is a configurable HTTP redirector built in go. It currently uses redis 
 ## Prerequisites
 
 * go
-* redis
-* Ruby (optional, for the foreman gem)
+* [redis](http://redis.io/)
+* [forego](https://github.com/ddollar/forego) (optional, for development convenience)
 
 ## Getting Started
 
   $ gem install --no-ri --no-rdoc foreman
   $ make
-  $ foreman start
+  $ forego start
 
 Or, without foreman:
 
