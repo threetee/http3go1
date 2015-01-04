@@ -13,6 +13,7 @@ WORKDIR /go/src/github.com/threetee/http3go1
 RUN make admin
 
 ENV ADMIN_PORT=9000
+ENV ADMIN_STATICDIR=/go/src/github.com/threetee/http3go1/static
 
 # Run the command by default when the container starts.
 CMD /go/src/github.com/threetee/http3go1/admin --logtostderr=true
