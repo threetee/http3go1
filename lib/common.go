@@ -69,6 +69,7 @@ func NewRedirect(sourceurl, targeturl string) *Redirect {
 
 // stores a new Redirect for the given key, sourceurl and targeturl. Existing
 // ones with the same url will be overwritten
+// TODO: consider using MULTI to ensure data integrity
 func store(sourceurl, targeturl string) *Redirect {
   redir := NewRedirect(sourceurl, targeturl)
   redirsSet := constructRedirsSetName()
@@ -76,6 +77,7 @@ func store(sourceurl, targeturl string) *Redirect {
   go redis.Hset(redir.Key, "SourceUrl", redir.SourceUrl)
   go redis.Hset(redir.Key, "CreationDate", redir.CreationDate)
   go redis.Hset(redir.Key, "Clicks", redir.Clicks)
+  go redis.Srem(redirsSet, redir.SourceUrl)
   go redis.Sadd(redirsSet, redir.SourceUrl)
   return redir
 }
