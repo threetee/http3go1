@@ -49,6 +49,9 @@ docker-dist-admin:
 	docker build -t threetee/http3go1-admin .
 	-rm -f Dockerfile
 
+docker-push:
+	docker push threetee/http3go1-admin
+
 bin-dist: admin redirector assets
 	cp admin $(MYTARGDIR)/$(PREFIX)/bin
 	cp redirector $(MYTARGDIR)/$(PREFIX)/bin
