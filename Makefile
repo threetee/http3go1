@@ -17,10 +17,7 @@ ALL=deps admin redirector
 all: $(ALL)
 
 deps:
-	go get github.com/kelseyhightower/envconfig
-	go get github.com/simonz05/godis/redis
-	go get github.com/gorilla/mux
-	go get github.com/golang/glog
+	dep ensure
 
 %: deps %.go
 	go build $@.go
@@ -50,6 +47,7 @@ docker-dist-admin:
 	-rm -f Dockerfile
 
 docker-push:
+	docker push threetee/http3go1-redirector
 	docker push threetee/http3go1-admin
 
 bin-dist: admin redirector assets

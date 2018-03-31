@@ -1,22 +1,22 @@
-# Start from a Debian image with the latest version of Go installed
-# and a workspace (GOPATH) configured at /go.
-FROM golang
+# build stage
+FROM threetee/golang-alpine-dep AS build-env
+ADD . /go/src/github.com/threetee/http3go1/
+RUN \
+  cd /go/src/github.com/threetee/http3go1 && \
+  dep ensure && \
+  go build -o admin admin.go && \
+  tar cvzpf /tmp/build.tar.gz admin static
 
-# Copy the local package files to the container's workspace.
-ADD . /go/src/github.com/threetee/http3go1
-
-WORKDIR /go/src/github.com/threetee/http3go1
-
-# Build the outyet command inside the container.
-# (You may fetch or manage dependencies here,
-# either manually or with a tool like "godep".)
-RUN make admin
+# final stage
+FROM alpine
+WORKDIR /app
+COPY --from=build-env /tmp/build.tar.gz /tmp/
+RUN tar xvzpf /tmp/build.tar.gz
 
 ENV ADMIN_PORT=9000
-ENV ADMIN_STATICDIR=/go/src/github.com/threetee/http3go1/static
+ENV ADMIN_STATICDIR=/app/static
 
-# Run the command by default when the container starts.
-CMD /go/src/github.com/threetee/http3go1/admin --logtostderr=true
-
-# Document that the service listens on port 9001.
 EXPOSE 9001
+
+CMD ./admin --logtostderr=true
+
