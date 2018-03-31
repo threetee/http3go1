@@ -12,15 +12,16 @@ http3go1 is a configurable HTTP redirector built in go. It currently uses redis 
 
 ## Getting Started
 
-  $ gem install --no-ri --no-rdoc foreman
-  $ make
-  $ forego start
+With forego:
+
+    $ make
+    $ forego start
 
 Or, without foreman:
 
-  $ make
-  $ ./admin &
-  $ ./redirector &
+    $ make
+    $ ./admin &
+    $ ./redirector &
 
 ## Configuration
 
