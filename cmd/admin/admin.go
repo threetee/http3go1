@@ -8,7 +8,7 @@ import (
   "github.com/kelseyhightower/envconfig"
   "github.com/gorilla/mux"
   // godis "github.com/simonz05/godis/redis"
-  "github.com/threetee/http3go1/lib"
+  "github.com/threetee/http3go1/internal/pkg/common"
   "github.com/golang/glog"
 )
 

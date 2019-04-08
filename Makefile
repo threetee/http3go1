@@ -32,6 +32,12 @@ clean:
 	rm -rf $(CLEANFILES)
 	go clean
 
+admin: deps
+	go build cmd/admin/admin.go
+
+redirector: deps
+	go build cmd/redirector/redirector.go
+
 docker-dist: deps docker-dist-redirector docker-dist-admin
 
 docker-dist-redirector:

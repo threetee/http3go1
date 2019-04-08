@@ -2,34 +2,49 @@
 
 
 [[projects]]
+  digest = "1:2edd2416f89b4e841df0e4a78802ce14d2bc7ad79eba1a45986e39f0f8cb7d87"
   name = "github.com/golang/glog"
   packages = ["."]
+  pruneopts = "UT"
   revision = "44145f04b68cf362d9c4df2182967c2275eaefed"
 
 [[projects]]
+  digest = "1:874ca00e54068a78ce555979489511ec62cd4682bf068134dc4355753827895c"
   name = "github.com/gorilla/context"
   packages = ["."]
+  pruneopts = "UT"
   revision = "215affda49addc4c8ef7e2534915df2c8c35c6cd"
 
 [[projects]]
+  digest = "1:c661dee65a46d437daf269e5f5f462bd9df6d8e7c9750ad1655fb2cafdb177a6"
   name = "github.com/gorilla/mux"
   packages = ["."]
+  pruneopts = "UT"
   revision = "e444e69cbd2e2e3e0749a2f3c717cec491552bbf"
 
 [[projects]]
+  digest = "1:a240a1e42bbc9f8b152859fea7e50c9361798ca88f00a46a142071a1d227330d"
   name = "github.com/kelseyhightower/envconfig"
   packages = ["."]
+  pruneopts = "UT"
   revision = "e9049346b6aae8e6ad500c5a4519ad029439d660"
 
 [[projects]]
   branch = "master"
+  digest = "1:edc685b9c9b4d94a175f5d123e50ac96f1eb5f3fafdfb99dfa04052e244e280d"
   name = "github.com/simonz05/godis"
   packages = ["redis"]
+  pruneopts = "UT"
   revision = "109ffb8e37383eb0e84811aefd5c6b952dfb005d"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "c6982055cfbfa26b18938105c6c6a0a6ebdac5f249d05dfaa4f920e145f2261b"
+  input-imports = [
+    "github.com/golang/glog",
+    "github.com/gorilla/mux",
+    "github.com/kelseyhightower/envconfig",
+    "github.com/simonz05/godis/redis",
+  ]
   solver-name = "gps-cdcl"
   solver-version = 1

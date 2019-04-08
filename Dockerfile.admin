@@ -3,9 +3,8 @@ FROM threetee/golang-alpine-dep AS build-env
 ADD . /go/src/github.com/threetee/http3go1/
 RUN \
   cd /go/src/github.com/threetee/http3go1 && \
-  dep ensure && \
-  go build -o admin admin.go && \
-  tar cvzpf /tmp/build.tar.gz admin static
+  make admin && \
+  tar cvzpf /tmp/build.tar.gz admin web/static/
 
 # final stage
 FROM alpine
@@ -14,9 +13,9 @@ COPY --from=build-env /tmp/build.tar.gz /tmp/
 RUN tar xvzpf /tmp/build.tar.gz
 
 ENV ADMIN_PORT=9000
-ENV ADMIN_STATICDIR=/app/static
+ENV ADMIN_STATICDIR=/app/web/static
 
 EXPOSE 9001
 
-CMD ./admin --logtostderr=true
+CMD ["/app/admin", "--logtostderr=true"]
 

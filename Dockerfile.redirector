@@ -1,7 +1,11 @@
 # build stage
-FROM threetee/golang-alpine-dep AS build-env
+FROM threetee/golang-alpine-dep:1.10.2 AS build-env
+
 ADD . /go/src/github.com/threetee/http3go1/
-RUN cd /go/src/github.com/threetee/http3go1 && dep ensure && go build -o redirector redirector.go
+
+RUN \
+  cd /go/src/github.com/threetee/http3go1 && \
+  make redirector
 
 # final stage
 FROM alpine
@@ -12,5 +16,5 @@ ENV REDIRECTOR_PORT=9000
 
 EXPOSE 9000
 
-CMD ./redirector --logtostderr=true
+CMD ["/app/redirector", "--logtostderr=true"]
 
