@@ -44,10 +44,9 @@ func main() {
 	glog.Infof("Config: %+v", redirConf)
 
 	router := mux.NewRouter()
-	subRouter := router.Schemes("{scheme:(.*)}").Host("{host:(.*)}").Subrouter()
-	subRouter.HandleFunc("/healthz", common.Healthcheck)
-	subRouter.HandleFunc("/{path:([\\$\\-\\_\\.\\+\\!\\(\\)\\,a-zA-Z0-9]*$)}", common.Resolve)
-	http.Handle("/", common.HttpInterceptor(subRouter))
+	router.HandleFunc("/healthz", common.Healthcheck)
+	router.HandleFunc("/{path:[\\$\\/\\-\\_\\.\\+\\!\\(\\)\\,a-zA-Z0-9]*}", common.Resolve)
+	http.Handle("/", common.HttpInterceptor(router))
 
 	listen := redirConf.Host
 	port := redirConf.Port

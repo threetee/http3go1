@@ -17,7 +17,7 @@ With forego:
     $ make
     $ forego start
 
-Or, without foreman:
+Or, without forego:
 
     $ make
     $ ./admin &
