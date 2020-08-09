@@ -1,18 +1,18 @@
 package common
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
-	"net/url"
 	"strconv"
 	"time"
 
+	goredis "github.com/go-redis/redis/v8"
 	"github.com/golang/glog"
 	"github.com/gorilla/mux"
 	"github.com/kelseyhightower/envconfig"
-	godis "github.com/simonz05/godis/redis"
 )
 
 const (
@@ -37,10 +37,12 @@ type Redirect struct {
 }
 
 var (
-	redis        *godis.Client
+	redis  *goredis.Client
 	filenotfound string
 	redisconf    RedisConf
 )
+
+var ctx = context.Background()
 
 // Converts the Redirect to JSON.
 func (r Redirect) Json() []byte {
@@ -74,12 +76,12 @@ func NewRedirect(sourceurl, targeturl string) *Redirect {
 func store(sourceurl, targeturl string) *Redirect {
 	redir := NewRedirect(sourceurl, targeturl)
 	redirsSet := constructRedirsSetName()
-	go redis.Hset(redir.Key, "TargetUrl", redir.TargetUrl)
-	go redis.Hset(redir.Key, "SourceUrl", redir.SourceUrl)
-	go redis.Hset(redir.Key, "CreationDate", redir.CreationDate)
-	go redis.Hset(redir.Key, "Clicks", redir.Clicks)
-	go redis.Srem(redirsSet, redir.SourceUrl)
-	go redis.Sadd(redirsSet, redir.SourceUrl)
+	go redis.HSet(ctx, redir.Key, "TargetUrl", redir.TargetUrl)
+	go redis.HSet(ctx, redir.Key, "SourceUrl", redir.SourceUrl)
+	go redis.HSet(ctx, redir.Key, "CreationDate", redir.CreationDate)
+	go redis.HSet(ctx, redir.Key, "Clicks", redir.Clicks)
+	go redis.SRem(ctx, redirsSet, redir.SourceUrl)
+	go redis.SAdd(ctx, redirsSet, redir.SourceUrl)
 	return redir
 }
 
@@ -88,13 +90,20 @@ func store(sourceurl, targeturl string) *Redirect {
 func load(url string) (*Redirect, error) {
 	glog.Infof("Loading redirect for: %s", url)
 	key := constructRedirKey(url)
-	if ok, _ := redis.Hexists(key, "SourceUrl"); ok {
+	glog.Infof("Redis key: %s", key)
+
+	if ok, _ := redis.HExists(ctx, key, "SourceUrl").Result(); ok {
 		redir := new(Redirect)
 		redir.Key = key
-		reply, _ := redis.Hmget(key, "TargetUrl", "SourceUrl", "CreationDate", "Clicks")
-		redir.TargetUrl, redir.SourceUrl, redir.CreationDate, redir.Clicks =
-			reply.Elems[0].Elem.String(), reply.Elems[1].Elem.String(),
-			reply.Elems[2].Elem.Int64(), reply.Elems[3].Elem.Int64()
+		reply, _ := redis.HMGet(ctx, key, "TargetUrl", "SourceUrl", "CreationDate", "Clicks").Result()
+		target := reply[0].(string)
+		source := reply[1].(string)
+		creationDate, _ := strconv.ParseInt(reply[2].(string), 10, 64)
+		var clicks int64 = 0
+		if (reply[3] != nil) {
+			clicks, _ = strconv.ParseInt(reply[3].(string), 10, 64)
+		}
+		redir.TargetUrl, redir.SourceUrl, redir.CreationDate, redir.Clicks = target, source, creationDate, clicks
 		return redir, nil
 	}
 	return nil, errors.New("unknown key: " + key)
@@ -108,9 +117,9 @@ func ListRedirects(w http.ResponseWriter, r *http.Request) {
 	var redirs = []*Redirect{}
 
 	redirsSetName := constructRedirsSetName()
-	rs, _ := redis.Smembers(redirsSetName)
-	for _, r := range rs.Elems {
-		redir, err := load(r.Elem.String())
+	rs, _ := redis.SMembers(ctx, redirsSetName).Result()
+	for _, r := range rs {
+		redir, err := load(r)
 		if err == nil {
 			glog.Infof("Appending redirect")
 			redirs = append(redirs, redir)
@@ -141,6 +150,7 @@ func CreateRedirect(w http.ResponseWriter, r *http.Request) {
 
 // healthcheck
 func Healthcheck(w http.ResponseWriter, r *http.Request) {
+	glog.Infof("running healthcheck")
 	fmt.Fprintf(w, "ok")
 }
 
@@ -149,27 +159,25 @@ func Resolve(w http.ResponseWriter, r *http.Request) {
 	glog.Infof("request: %+v", r)
 	glog.Infof("request mux vars: %+v", mux.Vars(r))
 
-	scheme := mux.Vars(r)["scheme"]
-	host := mux.Vars(r)["host"]
-	path := mux.Vars(r)["path"]
-	u, err := url.Parse("")
-	if err != nil {
-		glog.Fatal(err)
-	}
-	u.Scheme = scheme
-	u.Host = host
-	u.Path = path
+	u := r.URL
 
 	if u.Scheme == "" {
 		u.Scheme = "http"
 	}
+	if u.Host == "" {
+		u.Host = r.Host
+	}
+
+	// glog.Infof("scheme: %s", u.Scheme)
+	// glog.Infof("host: %s", u.Host)
+	glog.Infof("path: %s", u.Path)
 
 	glog.Infof("url: %s", u.String())
 
 	redir, err := load(u.String())
 	if err == nil {
 		glog.Infof("Found source URL %s, redirecting to target URL %s", redir.Key, redir.TargetUrl)
-		go redis.Hincrby(redir.Key, "Clicks", 1)
+		go redis.HIncrBy(ctx, redir.Key, "Clicks", 1)
 		http.Redirect(w, r, redir.TargetUrl, http.StatusMovedPermanently)
 	} else {
 		glog.Infof("Error: %s. Redirecting to default target URL %s", err, filenotfound)
@@ -182,7 +190,7 @@ func Init(defaultTarget string) {
 	err := envconfig.Process("redis", &redisconf)
 
 	if redisconf.Host == "" {
-		redisconf.Host = "tcp:localhost:6379"
+		redisconf.Host = "localhost:6379"
 	}
 	if redisconf.DB == "" {
 		redisconf.DB = "0"
@@ -201,7 +209,11 @@ func Init(defaultTarget string) {
 	}
 	passwd := redisconf.Pass
 
-	redis = godis.New(host, db, passwd)
+	redis = goredis.NewClient(&goredis.Options{
+		Addr: 		host,
+		DB: 			db,
+		Password: passwd,
+	})
 
 	if defaultTarget == "" {
 		filenotfound = "http://www.google.com"

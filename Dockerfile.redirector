@@ -1,5 +1,5 @@
 # build stage
-FROM threetee/golang-alpine-dep:1.10.2 AS build-env
+FROM threetee/golang-alpine-dep:1.14.6 AS build-env
 
 ADD . /go/src/github.com/threetee/http3go1/
 

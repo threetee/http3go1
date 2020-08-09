@@ -71,7 +71,7 @@ func main() {
   // router.HandleFunc("/{short:([a-zA-Z0-9]+)\\+$}", info)
   // router.HandleFunc("/info/{short:[a-zA-Z0-9]+}", info)
 
-  router.HandleFunc("/{fileName:(.*$)}", static)
+  router.HandleFunc("/{fileName:(?:.*$)}", static)
 
   http.Handle("/", common.HttpInterceptor(router))
   http.Handle("/redirects", common.HttpInterceptor(subRouter))

@@ -12,18 +12,14 @@ endif
 
 CLEANFILES=$(MYTARGDIR)
 
-ALL=deps admin redirector
+ALL=admin redirector
 
 all: $(ALL)
 
-deps:
-	dep ensure
-
-%: deps %.go
+%: %.go
 	go build $@.go
 
-test: deps
-	go test lib/*.go
+test:
 	go test admin.go
 	go test redirector.go
 
@@ -32,13 +28,13 @@ clean:
 	rm -rf $(CLEANFILES)
 	go clean
 
-admin: deps
+admin:
 	go build cmd/admin/admin.go
 
-redirector: deps
+redirector:
 	go build cmd/redirector/redirector.go
 
-docker-dist: deps docker-dist-redirector docker-dist-admin
+docker-dist: docker-dist-redirector docker-dist-admin
 
 docker-dist-redirector:
 	-rm -f Dockerfile
@@ -68,4 +64,4 @@ directories:
 	mkdir -p $(MYTARGDIR)/$(STATIC_DIR)
 	mkdir -p $(MYTARGDIR)/$(PREFIX)/bin
 
-.PHONY: all deps clean assets directories test
+.PHONY: all clean assets directories test
